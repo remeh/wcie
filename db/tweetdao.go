@@ -33,16 +33,25 @@ func (d *TweetDAO) Save(tweet *Tweet) error {
 }
 
 // Gets many tweets using the given time bucket.
-// A time bucket represents a set of tweets regrouped by minute.
-func (d *TweetDAO) GetMinuteBucket(bucket time.Time) ([]Tweet, error) {
-	// Retrieves some questions
+// A time bucket represents a set of tweets grouped by minute.
+func (d *TweetDAO) GetHourBucket(bucket time.Time) ([]Tweet, error) {
 	var q *mgo.Query
-	// Do we allow already used questions ?
-	if used {
-		// TODO avoid to take too recent questions
-		q = d.collection.Find(bson.M{"minute_bucket": bucket})
-	}
 
+	q = d.collection.Find(bson.M{"hour_bucket": bucket})
+    return unrollQuery(q)
+}
+
+// Gets many tweets using the given time bucket.
+// A time bucket represents a set of tweets grouped by minute.
+func (d *TweetDAO) GetMinuteBucket(bucket time.Time) ([]Tweet, error) {
+	var q *mgo.Query
+
+	q = d.collection.Find(bson.M{"minute_bucket": bucket})
+    return unrollQuery(q)
+}
+
+// Read the whole iterator to return tweets.
+func (d *TweetDAO) unrollQuery(q *mgo.Query) ([]Tweet, error) {
 	iter := q.Iter()
 	var tweet Tweet
 	tweets := make([]Tweet, 0)
