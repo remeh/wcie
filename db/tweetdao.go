@@ -1,7 +1,7 @@
 package db
 
 import (
-	"errors"
+    "time"
 
 	"gopkg.in/v2/mgo"
 	"gopkg.in/v2/mgo/bson"
@@ -38,7 +38,7 @@ func (d *TweetDAO) GetHourBucket(bucket time.Time) ([]Tweet, error) {
 	var q *mgo.Query
 
 	q = d.collection.Find(bson.M{"hour_bucket": bucket})
-    return unrollQuery(q)
+    return d.unrollQuery(q)
 }
 
 // Gets many tweets using the given time bucket.
@@ -47,7 +47,7 @@ func (d *TweetDAO) GetMinuteBucket(bucket time.Time) ([]Tweet, error) {
 	var q *mgo.Query
 
 	q = d.collection.Find(bson.M{"minute_bucket": bucket})
-    return unrollQuery(q)
+    return d.unrollQuery(q)
 }
 
 // Read the whole iterator to return tweets.
