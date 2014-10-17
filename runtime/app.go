@@ -3,12 +3,10 @@ package runtime
 import (
     "log"
     "time"
-
-    "github.com/remeh/wcie/crawl"
 )
 
 const (
-    FREQUENCY = 10 // Job frequency of execution. (unit: minutes)
+    FREQUENCY = 30 // Job frequency of execution. (unit: seconds). Can't be < 5
 )
 
 type App struct {
@@ -30,7 +28,7 @@ func (a *App) Start() {
 func (a *App) startCrawlJob() {
     nextExecution := time.Now()
 
-    log.Printf("Launching the crawling job, will execute every %d minutes.\n", FREQUENCY)
+    log.Printf("Launching the crawling job, will execute every %d seconds.\n", FREQUENCY)
 
     // Mainloop, yo.
     for {
@@ -39,18 +37,18 @@ func (a *App) startCrawlJob() {
             log.Println("Executing the crawling job.")
 
             // Generates for the next days
-            crawl.Crawl()
+            Crawl(a)
 
             nextExecution = a.programNextCrawl()
         }
 
-        time.Sleep(time.Minute * 1)
+        time.Sleep(time.Second * 5)
     }
 }
 
 // Programs the next execution of the job.
 func (a *App) programNextCrawl() time.Time {
     now := time.Now()
-    duration := time.Minute * FREQUENCY
+    duration := time.Second * FREQUENCY
     return now.Add(duration)
 }
