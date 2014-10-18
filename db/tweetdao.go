@@ -24,12 +24,21 @@ func NewTweetDAO(m *Mongo) *TweetDAO {
 	return &TweetDAO{m, m.GetCollection(C_TWEET)}
 }
 
-func (d *TweetDAO) Save(tweet *Tweet) error {
+// Save/update the given tweet.
+func (d *TweetDAO) Upsert(tweet *Tweet) error {
 	if len(tweet.Id) > 0 {
 		return d.collection.Update(bson.M{"_id": tweet.Id}, tweet)
 	} else {
 		return d.collection.Insert(tweet)
 	}
+}
+
+// Finds tweets by the tweet id.
+func (d *TweetDAO) FindByTweetId(id int64) ([]Tweet, error) {
+	var q *mgo.Query
+
+	q = d.collection.Find(bson.M{"tweet_id": id})
+    return d.unrollQuery(q)
 }
 
 // Gets many tweets using the given time bucket.

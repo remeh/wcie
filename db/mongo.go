@@ -19,10 +19,9 @@ type Mongo struct {
 
 // Retrieves a new Mongo Connection.
 // TODO pool of a sessions / connections
-// TODO configuration
-func GetConnection() *Mongo {
+func GetConnection(mongoURI string) *Mongo {
     m := new(Mongo)
-    session, err := mgo.Dial("localhost, localhost")
+    session, err := mgo.Dial(mongoURI)
     if err != nil {
         panic(err)
     }

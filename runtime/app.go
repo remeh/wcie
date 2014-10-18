@@ -3,45 +3,57 @@ package runtime
 import (
     "log"
     "time"
+    "os"
+    "os/signal"
+
+    "github.com/remeh/wcie/db"
 )
 
 const (
-    FREQUENCY = 30 // Job frequency of execution. (unit: seconds). Can't be < 5
+    FREQUENCY = 60 // Job frequency of execution. (unit: seconds). Can't be < 5
 )
 
 type App struct {
     // App configuration.
     Config Config
+    Mongo *db.Mongo
 }
 
 
 func NewApp(config Config) *App {
-    return &App{Config: config}
+    return &App{Config: config, Mongo: db.GetConnection(config.MongoURI)}
 }
 
 // Starts the application
 func (a *App) Start() {
-    a.startCrawlJob()
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+
+    go a.startCrawlJob()
+
+    <-c
+    log.Println("[info] Closing.")
 }
 
 // Starts the crawling Job.
 func (a *App) startCrawlJob() {
     nextExecution := time.Now()
 
-    log.Printf("Launching the crawling job, will execute every %d seconds.\n", FREQUENCY)
+    log.Printf("[info] Creating the crawling job, will execute every %d seconds.\n", FREQUENCY)
 
     // Mainloop, yo.
     for {
         // Do we have to run ?
         if nextExecution.Before(time.Now()) {
-            log.Println("Executing the crawling job.")
+            log.Println("[info] Executing the crawling job.")
 
             // Generates for the next days
-            Crawl(a)
+            crawler := NewCrawler(a)
+            crawler.Crawl()
 
             nextExecution = a.programNextCrawl()
+            log.Println("[info] End of the crawling job.")
         }
-
         time.Sleep(time.Second * 5)
     }
 }
