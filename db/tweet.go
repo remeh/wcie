@@ -23,6 +23,9 @@ type Tweet struct {
     // The tweet content
     Text string `bson:"text"`
 
+    // Which query has be done to retrieve this tweet
+    Query string `bson:"query"`
+
     // Time at which this tweet has been crawled by the system
     CrawlingTime time.Time `bson:"crawling_time"`
 
@@ -39,7 +42,7 @@ type Tweet struct {
 }
 
 // Creates a new Tweet from an anaconda.Tweet
-func NewTweetFromApiTweet(tweet *anaconda.Tweet) *Tweet {
+func NewTweetFromApiTweet(tweet *anaconda.Tweet, query string) *Tweet {
     // Some times handling
     now := time.Now()
     tweetTime, err := tweet.CreatedAtTime()
@@ -51,6 +54,7 @@ func NewTweetFromApiTweet(tweet *anaconda.Tweet) *Tweet {
     minuteBucket := time.Date(tweetTime.Year(), tweetTime.Month(), tweetTime.Day(), tweetTime.Hour(), tweetTime.Minute(), 0, 0, tweetTime.Location())
     hourBucket := time.Date(tweetTime.Year(), tweetTime.Month(), tweetTime.Day(), tweetTime.Hour(), 0, 0, 0, tweetTime.Location())
 
+    // Creates the tweet.
     return &Tweet{
         TweetId: tweet.Id,
         User: User{
@@ -58,6 +62,7 @@ func NewTweetFromApiTweet(tweet *anaconda.Tweet) *Tweet {
             ScreenName: tweet.User.ScreenName,
         },
         Text: tweet.Text,
+        Query: query,
         CrawlingTime: now,
         TweetTime: tweetTime,
         MinuteBucket: minuteBucket,

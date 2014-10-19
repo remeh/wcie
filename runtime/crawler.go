@@ -5,6 +5,7 @@ import (
     "net/url"
 
     "github.com/ChimeraCoder/anaconda"
+
     "github.com/remeh/wcie/db"
 )
 
@@ -64,7 +65,7 @@ func (c *Crawler) Search(api *anaconda.TwitterApi, query string) int {
         existing, err := tweetDao.FindByTweetId(tweet.Id)
         // Look for existing
         if len(existing) == 0 {
-            err = tweetDao.Upsert(db.NewTweetFromApiTweet(&tweet))
+            err = tweetDao.Upsert(db.NewTweetFromApiTweet(&tweet, query))
             if err == nil {
                 i++;
             }
