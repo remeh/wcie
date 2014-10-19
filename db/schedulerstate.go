@@ -11,7 +11,6 @@ import (
 type SchedulerState struct {
     Id string `bson:"_id"`
     LastScheduledMinute time.Time `bson:"last_scheduled_minute"`
-    LastScheduledHour time.Time `bson:"last_scheduled_hour"`
 }
 
 // ----------------------
@@ -23,7 +22,6 @@ func NewSchedulerState() *SchedulerState {
     return &SchedulerState{
         Id: "state_v1",
         LastScheduledMinute: t,
-        LastScheduledHour: t,
     }
 }
 

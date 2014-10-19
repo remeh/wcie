@@ -27,15 +27,31 @@ func (c *Cruncher) Crunch() {
 
     // Look whether its a minute or an hour to compute.
     for _, task := range tasks {
-        if task.Minute() == 0 {
+        // Special case for hours.
+        if task.Id.Minute() == 0 {
+            c.crunchHour(task.Id)
         }
+        // Minutes computing
+        c.crunchMinute(task.Id)
     }
 }
 
+// Crunches the data for the given minute.
 func (c *Cruncher) crunchMinute(t time.Time) {
-    // TODO
+    dao := db.NewTweetDAO(c.App.Mongo)
+    log.Printf("[info] [crunch] Will crunch the minute : %s\n", t)
+
+    tweets, err := dao.GetMinuteBucket(t)
+
+    if err != nil {
+        log.Printf("[err] [crunch] While retrieving the bucket for time %s : %s\n", t, err.Error())
+        return
+    }
+
+    log.Printf("[info] [crunch] Retrieved %d tweets to crunch\n", len(tweets))
 }
 
+// Crunches the data for the given hour.
 func (c *Cruncher) crunchHour(t time.Time) {
     // TODO
 }

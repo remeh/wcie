@@ -22,15 +22,14 @@ func NewScheduler(app *App) *Scheduler {
 func (s *Scheduler) Schedule() {
     state := db.NewSchedulerStateDAO(s.App.Mongo).Get()
 
-    s.scheduleMinute(state)
-    // TODO scheduleHour
+    s.schedule(state)
 }
 
 // Takes the last computed minute and generate tasks to reach
 // the new one.
 // If nothing has been computed (the LastComputedMinute is at 0), 
-// we just compute the current hour to the current minute.
-func (s *Scheduler) scheduleMinute(state *db.SchedulerState) {
+// we just schedule to compute each minute to the current time.
+func (s *Scheduler) schedule(state *db.SchedulerState) {
     now := time.Now()
     startMinute := state.LastScheduledMinute
     if state.LastScheduledMinute.IsZero() {
@@ -53,8 +52,8 @@ func (s *Scheduler) createMinuteTaskUntilNow(now *time.Time, t *time.Time) *time
         // Creates the crunching task.
         err := s.createCrunchingTaskFor(t)
         if err != nil {
-            log.Printf("[err] Unable to create the crunching task for time : %s\n", t)
-            log.Printf("[err] Reason : %s\n", err.Error())
+            log.Printf("[err] [scheduler] Unable to create the crunching task for time : %s\n", t)
+            log.Printf("[err] [scheduler] Reason : %s\n", err.Error())
         }
 
         // Adds one minute
@@ -65,16 +64,8 @@ func (s *Scheduler) createMinuteTaskUntilNow(now *time.Time, t *time.Time) *time
 
 // Creates the crunching task for the given time.
 func (s *Scheduler) createCrunchingTaskFor(t *time.Time) error {
-    // Creating the ID representing the date
-    var value int64
-    value = int64(t.Year() * 100 * 100 * 100 * 100)
-    value += int64(int(t.Month()) * 100 * 100 * 100)
-    value += int64(t.Day() * 100 * 100)
-    value += int64(t.Hour() * 100)
-    value += int64(t.Minute())
-
     // Creates and saves the task
-    task := &db.CrunchingTask{Id: value, CreationTime: time.Now()}
-    log.Printf("[info] Created crunching task for : %d\n", value)
+    task := &db.CrunchingTask{Id: *t, CreationTime: time.Now()}
+    log.Printf("[info] [scheduler] Created crunching task for : %s\n", *t)
     return db.NewCrunchingTaskDAO(s.App.Mongo).Upsert(task)
 }

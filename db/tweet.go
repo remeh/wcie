@@ -30,11 +30,11 @@ type Tweet struct {
     CrawlingTime time.Time `bson:"crawling_time"`
 
     // Date at which the tweet has been published by the author.
-    TweetTime time.Time `bson:"tweet_time"`
+    TweetTime time.Time `bson:"tweet_time_bucket"`
 
     // This bucket is used to regroup tweets by minute. It is based on the tweet time
     // and the seconds value is always set to 0 before insertion.
-    MinuteBucket time.Time `bson:"minute_time"`
+    MinuteBucket time.Time `bson:"minute_time_bucket"`
 
     // This bucket is used to regroup collected tweets by hour. It is based on the tweet time
     // and the minutes and seconds value is always set to 0 before insertion.

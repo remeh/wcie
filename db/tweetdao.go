@@ -46,7 +46,7 @@ func (d *TweetDAO) FindByTweetId(id int64) ([]Tweet, error) {
 func (d *TweetDAO) GetHourBucket(bucket time.Time) ([]Tweet, error) {
 	var q *mgo.Query
 
-	q = d.collection.Find(bson.M{"hour_bucket": bucket})
+	q = d.collection.Find(bson.M{"hour_time_bucket": bucket})
     return d.unrollQuery(q)
 }
 
@@ -55,7 +55,7 @@ func (d *TweetDAO) GetHourBucket(bucket time.Time) ([]Tweet, error) {
 func (d *TweetDAO) GetMinuteBucket(bucket time.Time) ([]Tweet, error) {
 	var q *mgo.Query
 
-	q = d.collection.Find(bson.M{"minute_bucket": bucket})
+	q = d.collection.Find(bson.M{"minute_time_bucket": bucket})
     return d.unrollQuery(q)
 }
 
