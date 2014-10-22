@@ -22,7 +22,7 @@ func NewCrunchingTaskDAO(m *Mongo) *CrunchingTaskDAO {
 	return &CrunchingTaskDAO{m, m.GetCollection(C_CRUNCHING_TASK)}
 }
 
-// Save/update the given tweet.
+// Save/update the given task.
 func (d *CrunchingTaskDAO) Upsert(task *CrunchingTask) error {
     _, err := d.collection.Upsert(bson.M{"_id": task.Id}, task)
     return err

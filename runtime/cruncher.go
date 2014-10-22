@@ -59,7 +59,9 @@ func (c *Cruncher) Crunch() {
 // Crunches the data for the given minute.
 // Returns whether or not this data has been crunched
 func (c *Cruncher) crunch(t time.Time, hour bool) bool {
-    dao := db.NewTweetDAO(c.App.Mongo)
+    tweetDAO := db.NewTweetDAO(c.App.Mongo)
+    resultDAO := db.NewCruncherResultDAO(c.App.Mongo)
+
     crunchType := "minute"
     if hour {
         crunchType = "hour"
@@ -75,9 +77,9 @@ func (c *Cruncher) crunch(t time.Time, hour bool) bool {
     var tweets []db.Tweet
     var err error
     if hour {
-        tweets, err = dao.GetHourBucket(t)
+        tweets, err = tweetDAO.GetHourBucket(t)
     } else {
-        tweets, err = dao.GetMinuteBucket(t)
+        tweets, err = tweetDAO.GetMinuteBucket(t)
     }
 
     if err != nil {
@@ -88,7 +90,7 @@ func (c *Cruncher) crunch(t time.Time, hour bool) bool {
     log.Printf("[info] [crunch] [%s] Retrieved %d tweets to crunch\n", crunchType, len(tweets))
 
     // Do the math.
-    err = c.aggregateTweets(tweets)
+    err = c.aggregateTweets(resultDAO, t, tweets)
 
     if err != nil {
         log.Printf("[err] [crunch] [%s] Error while computing data for tweets of : %s\n", crunchType, t)
@@ -116,7 +118,7 @@ func (c *Cruncher) isOver(t time.Time, hour bool) bool {
     return false
 }
 
-func (c *Cruncher) aggregateTweets(tweets []db.Tweet) error {
+func (c *Cruncher) aggregateTweets(resultDAO *db.CruncherResultDAO, bucket time.Time, tweets []db.Tweet) error {
     // TODO This method could be speed up by 
     // ordering the tweets with their query 
     // and using regexp for the query.
@@ -125,8 +127,6 @@ func (c *Cruncher) aggregateTweets(tweets []db.Tweet) error {
     // of each word located just after the query
     data := make(map[string]int)
 
-    // This algorithm could be speed up
-    // Too many Trim call
     for _, tweet := range tweets {
         parts := strings.Split(strings.ToLower(tweet.Text), tweet.Query)
         if len(parts) == 1 {
@@ -134,12 +134,13 @@ func (c *Cruncher) aggregateTweets(tweets []db.Tweet) error {
             continue
         }
         trimmed := strings.Trim(parts[1], " .,!?")
-        nextSpace := strings.Index(trimmed, " ")
+        cleaned := c.cleanWord(trimmed)
+        nextSpace := strings.Index(cleaned, " ")
         word := ""
         if nextSpace == -1 {
-            word = trimmed
+            word = cleaned
         } else {
-            word = strings.Trim(trimmed[0:nextSpace], ".!?,")
+            word = cleaned[0:nextSpace]
         }
 
         if data[word] != 0 {
@@ -149,7 +150,15 @@ func (c *Cruncher) aggregateTweets(tweets []db.Tweet) error {
         }
     }
 
-    // TODO save this data.
+    return resultDAO.Upsert(&db.CruncherResult{Id: bucket, Data: data})
+}
 
-    return nil
+// Temporary and ugly method to clean the word.
+func (c *Cruncher) cleanWord(word string) string {
+    w1 := strings.Replace(word, ".", " ", -1)
+    w2 := strings.Replace(w1, "!", " ", -1)
+    w3 := strings.Replace(w2, "?", " ", -1)
+    w4 := strings.Replace(w3, ".", " ", -1)
+    w5 := strings.Replace(w4, "#", " ", -1)
+    return w5
 }
