@@ -46,3 +46,15 @@ func (d *CrunchingTaskDAO) GetNext(limit int) ([]CrunchingTask, error) {
 
     return tasks, nil
 }
+
+// Deletes the given task from MongoDB
+func (d *CrunchingTaskDAO) RemoveAll(tasks []CrunchingTask) error {
+    // FIXME Bulk delete
+    for _, task := range tasks {
+        err := d.collection.Remove(task)
+        if err != nil {
+            return err
+        }
+    }
+    return nil
+}

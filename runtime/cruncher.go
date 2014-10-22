@@ -9,6 +9,10 @@ import (
     "github.com/remeh/wcie/db"
 )
 
+const (
+    TASK_COUNT_DONE_EACH_ITERATION = 50
+)
+
 // Our crawler.
 type Cruncher struct {
     App *App
@@ -20,25 +24,39 @@ func NewCruncher(app *App) *Cruncher {
 
 // Takes some task to do and crunch the data
 func (c *Cruncher) Crunch() {
-    tasks, err := db.NewCrunchingTaskDAO(c.App.Mongo).GetNext(5)
+    taskDAO := db.NewCrunchingTaskDAO(c.App.Mongo)
+    tasks, err := taskDAO.GetNext(TASK_COUNT_DONE_EACH_ITERATION)
     if err != nil {
         log.Printf("[error] While retrieving some tasks to do : %s\n", err.Error())
         return
     }
 
+    crunched := make([]db.CrunchingTask, 0)
+
     // Look whether its a minute or an hour to compute.
     for _, task := range tasks {
+        done := false
         // Special case for hours.
         if task.Id.Minute() == 0 {
-            c.crunch(task.Id, true)
+            done = c.crunch(task.Id, true)
         }
         // Minutes computing
-        c.crunch(task.Id, false)
+        done = c.crunch(task.Id, false)
+
+        if done {
+            crunched = append(crunched, task)
+        }
+    }
+
+    err = taskDAO.RemoveAll(crunched)
+    if err != nil {
+        log.Printf("[err] [crunch] Error while removing crunched tasks : %s\n", err.Error())
     }
 }
 
 // Crunches the data for the given minute.
-func (c *Cruncher) crunch(t time.Time, hour bool) {
+// Returns whether or not this data has been crunched
+func (c *Cruncher) crunch(t time.Time, hour bool) bool {
     dao := db.NewTweetDAO(c.App.Mongo)
     crunchType := "minute"
     if hour {
@@ -56,7 +74,7 @@ func (c *Cruncher) crunch(t time.Time, hour bool) {
 
     if err != nil {
         log.Printf("[err] [crunch] While retrieving the bucket for time %s : %s\n", crunchType, t, err.Error())
-        return
+        return false
     }
 
     log.Printf("[info] [crunch] [%s] Retrieved %d tweets to crunch\n", crunchType, len(tweets))
@@ -66,7 +84,10 @@ func (c *Cruncher) crunch(t time.Time, hour bool) {
 
     if err != nil {
         log.Printf("[err] [crunch] [%s] Error while computing data for tweets of : %s\n", crunchType, t)
+        return false
     }
+
+    return true
 }
 
 func (c *Cruncher) aggregateTweets(tweets []db.Tweet) error {
@@ -76,8 +97,7 @@ func (c *Cruncher) aggregateTweets(tweets []db.Tweet) error {
 
     // In this map, I'll store the number of occurences
     // of each word located just after the query
-    var data map[string]int
-    data = make(map[string]int)
+    data := make(map[string]int)
 
     // This algorithm could be speed up
     // Too many Trim call
@@ -104,7 +124,6 @@ func (c *Cruncher) aggregateTweets(tweets []db.Tweet) error {
     }
 
     // TODO save this data.
-    log.Println(data)
 
     return nil
 }
