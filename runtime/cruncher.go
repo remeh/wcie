@@ -64,6 +64,11 @@ func (c *Cruncher) crunch(t time.Time, hour bool) bool {
     }
     log.Printf("[info] [crunch] [%s] Will crunch the minute : %s\n", crunchType, t)
 
+    // Checks if it's time to compute this bucket
+    if isOver(t, hour) {
+        return false
+    }
+
     var tweets []db.Tweet
     var err error
     if hour {
@@ -88,6 +93,24 @@ func (c *Cruncher) crunch(t time.Time, hour bool) bool {
     }
 
     return true
+}
+
+// To be sure that the hour / minute is finished
+func (c *Cruncher) isOver(t time.Time, bool hour) bool {
+    var plusOne time.Time
+    if hour {
+        plusOne := t.Add(time.Duration(1)*time.Hour)
+        plusOne = time.Date(plusOne.Year(), plusOne.Month(), plusOne.Day(), plusOne.Hour(), 0, 0, 0, t.Location())
+    } else {
+        plusOne := t.Add(time.Duration(1)*time.Minute)
+        plusOne = time.Date(plusOne.Year(), plusOne.Month(), plusOne.Day(), plusOne.Hour(), plusOne.Minute(), 0, 0, t.Location())
+    }
+
+    // Test that it's time to compute it
+    if plusOne.isAfter(time.Now()) {
+        return true
+    }
+    return false:
 }
 
 func (c *Cruncher) aggregateTweets(tweets []db.Tweet) error {
