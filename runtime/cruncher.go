@@ -38,10 +38,12 @@ func (c *Cruncher) Crunch() {
         done := false
         // Special case for hours.
         if task.Id.Minute() == 0 {
-            done = c.crunch(task.Id, true)
+            // Crunch as minute and hour
+            done = (c.crunch(task.Id, false) && c.crunch(task.Id, true))
+        } else {
+            // Minutes computing
+            done = c.crunch(task.Id, false)
         }
-        // Minutes computing
-        done = c.crunch(task.Id, false)
 
         if done {
             crunched = append(crunched, task)
@@ -62,12 +64,13 @@ func (c *Cruncher) crunch(t time.Time, hour bool) bool {
     if hour {
         crunchType = "hour"
     }
-    log.Printf("[info] [crunch] [%s] Will crunch the minute : %s\n", crunchType, t)
 
     // Checks if it's time to compute this bucket
-    if isOver(t, hour) {
+    if !c.isOver(t, hour) {
         return false
     }
+
+    log.Printf("[info] [crunch] [%s] Will crunch the %s : %s\n", crunchType, crunchType, t)
 
     var tweets []db.Tweet
     var err error
@@ -96,21 +99,21 @@ func (c *Cruncher) crunch(t time.Time, hour bool) bool {
 }
 
 // To be sure that the hour / minute is finished
-func (c *Cruncher) isOver(t time.Time, bool hour) bool {
+func (c *Cruncher) isOver(t time.Time, hour bool) bool {
     var plusOne time.Time
     if hour {
-        plusOne := t.Add(time.Duration(1)*time.Hour)
+        plusOne = t.Add(time.Duration(1)*time.Hour)
         plusOne = time.Date(plusOne.Year(), plusOne.Month(), plusOne.Day(), plusOne.Hour(), 0, 0, 0, t.Location())
     } else {
-        plusOne := t.Add(time.Duration(1)*time.Minute)
+        plusOne = t.Add(time.Duration(1)*time.Minute)
         plusOne = time.Date(plusOne.Year(), plusOne.Month(), plusOne.Day(), plusOne.Hour(), plusOne.Minute(), 0, 0, t.Location())
     }
 
     // Test that it's time to compute it
-    if plusOne.isAfter(time.Now()) {
+    if plusOne.Before(time.Now()) {
         return true
     }
-    return false:
+    return false
 }
 
 func (c *Cruncher) aggregateTweets(tweets []db.Tweet) error {
