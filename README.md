@@ -6,4 +6,5 @@ WIP
 
 ```
   github.com/ChimeraCoder/anaconda
+  gopkg.in/v2/mgo
 ```
