@@ -52,7 +52,8 @@ func NewTweetFromApiTweet(tweet *anaconda.Tweet, query string) *Tweet {
     }
 
     minuteBucket := time.Date(tweetTime.Year(), tweetTime.Month(), tweetTime.Day(), tweetTime.Hour(), tweetTime.Minute(), 0, 0, tweetTime.Location())
-    hourBucket := time.Date(tweetTime.Year(), tweetTime.Month(), tweetTime.Day(), tweetTime.Hour(), 0, 0, 0, tweetTime.Location())
+    // Note that the hour bucket has 1 for second, it's a way to differentiate it from minute bucket
+    hourBucket := time.Date(tweetTime.Year(), tweetTime.Month(), tweetTime.Day(), tweetTime.Hour(), 0, 1, 0, tweetTime.Location())
 
     // Creates the tweet.
     return &Tweet{

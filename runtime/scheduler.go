@@ -64,8 +64,19 @@ func (s *Scheduler) createMinuteTaskUntilNow(now *time.Time, t *time.Time) *time
 
 // Creates the crunching task for the given time.
 func (s *Scheduler) createCrunchingTaskFor(t *time.Time) error {
-    // Creates and saves the task
+    dao := db.NewCrunchingTaskDAO(s.App.Mongo)
+    // For hour, we create an extra task with second to 1
+    if t.Minute() == 0 {
+        hourTime := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 1, 0, t.Location())
+    log.Printf("[info] [scheduler] Created crunching task hour for : %s\n", hourTime)
+        task := &db.CrunchingTask{Id: hourTime, CreationTime: time.Now()}
+        err := dao.Upsert(task)
+        if err != nil {
+            return err
+        }
+    }
+    // Creates and saves the task for minute
     task := &db.CrunchingTask{Id: *t, CreationTime: time.Now()}
-    log.Printf("[info] [scheduler] Created crunching task for : %s\n", *t)
-    return db.NewCrunchingTaskDAO(s.App.Mongo).Upsert(task)
+    log.Printf("[info] [scheduler] Created crunching task minute for : %s\n", *t)
+    return dao.Upsert(task)
 }

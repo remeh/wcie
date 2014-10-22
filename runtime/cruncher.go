@@ -36,10 +36,10 @@ func (c *Cruncher) Crunch() {
     // Look whether its a minute or an hour to compute.
     for _, task := range tasks {
         done := false
-        // Special case for hours.
-        if task.Id.Minute() == 0 {
+        // Special case for hours, the nano is to 1.
+        if task.Id.Minute() == 0 && task.Id.Second() == 1 {
             // Crunch as minute and hour
-            done = (c.crunch(task.Id, false) && c.crunch(task.Id, true))
+            done = c.crunch(task.Id, true)
         } else {
             // Minutes computing
             done = c.crunch(task.Id, false)
