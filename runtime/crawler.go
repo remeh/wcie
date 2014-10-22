@@ -19,6 +19,7 @@ func NewCrawler(app *App) *Crawler {
 }
 
 // TODO cache tweet by ids.
+// TODO complex queries support
 func (c *Crawler) Crawl() {
     // Api twitter provided by ChimeraCoder !
     anaconda.SetConsumerKey(c.App.Config.TwitterApiKey)
@@ -26,10 +27,10 @@ func (c *Crawler) Crawl() {
     api := anaconda.NewTwitterApi(c.App.Config.TwitterAccessToken, c.App.Config.TwitterAccessTokenSecret)
     defer api.Close()
 
-    c.Search(api, "\"je mange un\"")
-    c.Search(api, "\"je mange une\"")
-    c.Search(api, "\"je mange du\"")
-    c.Search(api, "\"je mange des\"")
+    c.Search(api, "je mange un")
+    c.Search(api, "je mange une")
+    c.Search(api, "je mange du")
+    c.Search(api, "je mange des")
 }
 
 // Calls Twitter to execute the given query search.
@@ -44,7 +45,7 @@ func (c *Crawler) Search(api *anaconda.TwitterApi, query string) int {
     params := url.Values{}
     params.Set("count", "100")          // Amount of tweet possible in one query
     params.Set("result_type", "recent") // We want the more recent tweets
-    searchResult, err := api.GetSearch(query, params)
+    searchResult, err := api.GetSearch("\""+query+"\"", params)
 
     // Error, end of job for this time.
     if err != nil {
