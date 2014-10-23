@@ -104,10 +104,12 @@ func (c *Cruncher) crunch(t time.Time, hour bool) bool {
 func (c *Cruncher) isOver(t time.Time, hour bool) bool {
     var plusOne time.Time
     if hour {
+        // Wait the end of the hour.
         plusOne = t.Add(time.Duration(1)*time.Hour)
         plusOne = time.Date(plusOne.Year(), plusOne.Month(), plusOne.Day(), plusOne.Hour(), 0, 0, 0, t.Location())
     } else {
-        plusOne = t.Add(time.Duration(1)*time.Minute)
+        // Wait 3 minutes to be sure that twitter returned us every tweets.
+        plusOne = t.Add(time.Duration(3)*time.Minute)
         plusOne = time.Date(plusOne.Year(), plusOne.Month(), plusOne.Day(), plusOne.Hour(), plusOne.Minute(), 0, 0, t.Location())
     }
 
