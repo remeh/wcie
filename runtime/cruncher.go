@@ -152,7 +152,7 @@ func (c *Cruncher) aggregateTweets(resultDAO *db.CruncherResultDAO, bucket time.
         }
     }
 
-    return resultDAO.Upsert(&db.CruncherResult{Id: bucket, Data: data})
+    return resultDAO.Upsert(&db.CruncherResult{Id: bucket, CreationTime: time.Now(), Data: data})
 }
 
 // Temporary and ugly method to clean the word.
