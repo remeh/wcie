@@ -39,6 +39,9 @@ type Tweet struct {
     // This bucket is used to regroup collected tweets by hour. It is based on the tweet time
     // and the minutes and seconds value is always set to 0 before insertion.
     HourBucket time.Time `bson:"hour_time_bucket"`
+
+    // If a Point coordinate is provided with the tweet, it is stored here.
+    Geo interface{} `bson:"geo"`
 }
 
 // Creates a new Tweet from an anaconda.Tweet
@@ -68,5 +71,6 @@ func NewTweetFromApiTweet(tweet *anaconda.Tweet, query string) *Tweet {
         TweetTime: tweetTime,
         MinuteBucket: minuteBucket,
         HourBucket: hourBucket,
+        Geo: tweet.Geo,
     }
 }
