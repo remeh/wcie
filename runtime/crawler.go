@@ -30,7 +30,12 @@ func (c *Crawler) Crawl() {
     c.Search(api, "je mange un")
     c.Search(api, "je mange une")
     c.Search(api, "je mange du")
+    c.Search(api, "je mange de la")
     c.Search(api, "je mange des")
+    c.Search(api, "je cuisine un")
+    c.Search(api, "je cuisine une")
+    c.Search(api, "je cuisine de la")
+    c.Search(api, "je cuisine des")
 }
 
 // Calls Twitter to execute the given query search.
